@@ -8,7 +8,9 @@ from scipy.special import factorial, i0
 from scipy import stats
 from collections import Counter
 from sklearn.neighbors import KernelDensity
+
 from matplotlib.animation import FuncAnimation
+from celluloid import Camera
 
 COLOR1 = '#1f77b4'
 COLOR2 = '#ff7f0e'
@@ -192,7 +194,7 @@ def plot_estimated_covariance(fixed_t=0.25, t0=0, t1=1,
     
 # ---------------------------------------- EXERCISE 7 ----------------------------------------
 
-def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None):
+def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, xlims=None, ylims=None):
     if axis is None:
         plt.figure(figsize=(12, 8))
         axis = plt.gca()
@@ -202,21 +204,29 @@ def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None):
     axis.hist(X, bins=n_bins, density=True, color=COLOR1, alpha=0.3)
     axis.set_xlabel('x')
     axis.set_ylabel('pdf(x)')
-    if hist_xlims is not None:
-        axis.set_xlim(hist_xlims)
-    
+    if xlims is not None:
+        axis.set_xlim(xlims)
+    if ylims is not None:
+        axis.set_ylim(ylims)
+
     # Compare with exact distribution
     n_plot = 1000
     X_from, X_to = np.min(X), np.max(X)
-    if hist_xlims is not None:
-        X_from, X_to = hist_xlims
+    if xlims is not None:
+        X_from, X_to = xlims
+
     x_plot = np.linspace(X_from, X_to, n_plot)
     y_plot = pdf(x_plot)
+
     axis.plot(x_plot, y_plot, linewidth=2, color=COLOR2)
     axis.legend(['Theoretical distribution', 'Empirical histogram'])
+        
 
-def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, pdf = None ,hist_xlims=None):
-    fig, axis = plt.subplots(1, 2, figsize=(15, 8))
+def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, fig=None, axis=None,
+                                pdf=None, hist_xlims=None, hist_ylims=None):
+
+    if fig is None or axis is None:
+        fig, axis = plt.subplots(1, 2, figsize=(15, 8))
     fixed_time = ts[fixed_t_index]
 
     # Plot the trajectories
@@ -226,24 +236,18 @@ def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, pdf = None ,hist
                     '$\pm$ 2 * standard deviation'])
 
     # Plot the histogram
-    
-
-    if pdf == None:
+    if pdf is None:
         mu, std = 0, np.sqrt(fixed_time)
-        normal_pdf = lambda x: stats.norm(mu, scale=std).pdf(x)
-    else:
-        normal_pdf = pdf
+        if std == 0:
+            # Dirac's delta centered on mu
+            pdf = lambda x: x == mu
+        else:
+            pdf = lambda x: stats.norm(mu, scale=std).pdf(x)\
     
-    plot_hist_and_pdf(trayectories[:, fixed_t_index], normal_pdf,
-                        axis=axis[1], hist_xlims=hist_xlims)
-
+    plot_hist_and_pdf(trayectories[:, fixed_t_index], pdf,
+                        axis=axis[1], xlims=hist_xlims, ylims=hist_ylims)
     fig.suptitle('Trajectories and histogram for t={:.2f}'.format(fixed_time))
 
-    # Maybe needed for animation
-    #return fig
-
-
-    
 # ---------------------------------------- EXERCISE 8 ----------------------------------------
 
 def brownian_animation(B0 = 0, max_t = 1,max_M = 10000, max_N = 1000 ):
@@ -259,3 +263,23 @@ def brownian_animation(B0 = 0, max_t = 1,max_M = 10000, max_N = 1000 ):
     def update_plot(i):
         ax.clear()
         ax.plot()
+
+
+def plot_trajectories_animation(ts, trayectories, n_frames=10, hist_pdf=None, hist_xlims=[-2,2], hist_ylims=[0,2]):
+    plt.rc('figure', figsize=(18, 10))
+    fig, ax = plt.subplots(2)
+    camera = Camera(fig)
+    time_indexes = np.arange(0, len(ts), int(len(ts)/n_frames))
+
+    for t_index in time_indexes:
+        plot_trajectories_and_hist(ts, trayectories, fixed_t_index=t_index,
+                                   fig=fig, axis=ax, pdf=hist_pdf,
+                                   hist_xlims=hist_xlims, hist_ylims=hist_ylims)
+        camera.snap()
+        #ax[0].clear()
+        #ax[1].clear()
+    fig.suptitle('Trajectories and histogram for t $\in$[0, {:.1f}]'.format(ts[-1]))
+        
+    animation = camera.animate()
+    animation.save('animation.gif', writer='Pillow')
+    plt.close()
