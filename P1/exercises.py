@@ -2,34 +2,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imports.arrival_process_simulation as arrival
 import imports.stochastic_plots as plots
-
+import imports.BM_simulators as bm_sim
 
 from scipy.special import factorial, i0
 from scipy import stats
 from collections import Counter
 from sklearn.neighbors import KernelDensity
 
+COLOR1 = '#1f77b4'
+COLOR2 = '#ff7f0e'
+
+# ---------------------------------------- EXERCISE 1 ----------------------------------------
 
 def exercise_1(t=2, max_n=40, lamb=10, n_samples=10**4):
     """
-    Implements the whole exercise 1, in which we compare the empirical distribution obtained by simulating a Poisson process and the theoretical distribution 
- 
-    Parameters
-    ----------
-    t : float
-        Current time at the simulation
-    max_n : int
-        Maximum number of 
-    lamb : float
-        lambda parameter of the Poisson process
-    n_samples : int
-        Number of samples to generate for the empirical distribution
-    Returns
-    -------
-    No returns
-    Example
-    -------
-    exercise_1()
+        Implements the whole exercise 1, in which we compare the empirical
+        distribution obtained by simulating a Poisson process and the
+        theoretical distribution.
+    
+        Parameters
+        ----------
+        t : float
+            Current time at the simulation
+        max_n : int
+            Maximum number of 
+        lamb : float
+            lambda parameter of the Poisson process
+        n_samples : int
+            Number of samples to generate for the empirical distribution
+        Returns
+        -------
+        No returns
+
+        Example
+        -------
+        exercise_1()
     """
     # Theoretical
     ns = np.arange(max_n+1) * 1.0
@@ -52,6 +59,7 @@ def exercise_1(t=2, max_n=40, lamb=10, n_samples=10**4):
     plt.title('Empirical comparisson of a Poisson process with λ=10, t=2')
     plt.legend()
 
+# ---------------------------------------- EXERCISE 2 ----------------------------------------
 
 def plot_kde_in_axis(axis, ts, pdf, pdf_kde, samples, lamb, n):
     # Plot pdf and estimation
@@ -84,6 +92,7 @@ def exercise_2(ns=[1,2,5,10], lamb=5, max_t=7, n_samples_kde=10**4, kde_bandwidt
         # Plotting
         plot_kde_in_axis(ax, ts, sn_pdf, sn_pdf_estimation, sn_empirical, lamb, n)
     
+# ---------------------------------------- EXERCISE 4 ----------------------------------------
 
 def simulate_team_scores(t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
     return [ 
@@ -93,8 +102,8 @@ def simulate_team_scores(t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
                arrival.simulate_poisson(0, t, lamb2, n_samples))
     ]
 
-def estimate_prob(condition, t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
-    np.random.seed(123)
+def estimate_prob(condition, t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5, seed=123):
+    np.random.seed(seed)
     scores = simulate_team_scores(t=t, lamb1=lamb1, lamb2=lamb2, n_samples=n_samples)
     fullfil_condition = np.sum([ condition(score) for score in scores ])
     return 1.0*fullfil_condition / len(scores)
@@ -115,45 +124,113 @@ def team_B_scores_first_prob(t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
             count += arrival_times1[0] > arrival_times2[0]
     return 1.0 * count / n_samples
     
+# ---------------------------------------- EXERCISE 6 ----------------------------------------
 
-def simulate_wiener_process(initial_value=0, t0=0, t1=1, delta_t=0.001, n_processes=1):
+def simulate_wiener_process(t0=0, t1=1, delta_t=0.001, n_processes=100):
     n_steps = int((t1-t0) / delta_t)
-    std = np.sqrt(delta_t)
-    noise = np.random.normal(loc=0, scale=std, size=(n_processes, n_steps))
-    acum_noise = np.cumsum(noise, axis=1)
-    return np.arange(t0, t1, delta_t), initial_value + std * acum_noise
+    return bm_sim.simulate_arithmetic_BM(t0, B0=0, T=t1-t0, mu=0, sigma=1,
+                                         M=n_processes, N=n_steps)
 
-
-def estimate_covariance(fixed_t=0.25, initial_value=0, t0=0, t1=1, delta_t=0.001, n_processes=1):
-    t, trayectories = simulate_wiener_process(initial_value=initial_value,
-        t0=t0, t1=t1, delta_t=delta_t, n_processes=n_processes)
-    fixed_index = np.where(t==fixed_t)[0][0]
-    fixed_time_samples = trayectories.T[fixed_index]
-    cov = [ np.dot(time_sample, fixed_time_samples) for time_sample in trayectories.T ]
-    return t, cov
-
-def subplot_mean_and_std(axis, x, mean, std, color='b',
-                         xlims=None, ylims=None, xlabel=None, ylabel=None, title=None):
-    axis.plot(x, mean, color=color)
-    axis.fill_between(x, mean-std, mean+std, color=color, alpha=.3)
+def subplot_mean_and_std(axis, x, mean, std, color=COLOR1,
+                         xlims=None, ylims=None, xlabel=None,
+                         ylabel=None, title=None, alpha_std=.3):
+    axis.plot(x, mean, color='b')
+    axis.fill_between(x, mean-std, mean+std, color=color, alpha=alpha_std)
     if xlims is not None: axis.set_xlim(xlims)
     if ylims is not None: axis.set_ylim(ylims)
     if xlabel is not None: axis.set_xlabel(xlabel)
-    if xlabel is not None: axis.set_xlabel(xlabel)
+    if ylabel is not None: axis.set_ylabel(ylabel)
     if title is not None: axis.set_title(title)    
 
-def plot_estimated_covariance(fixed_t=0.25, initial_value=0, t0=0, t1=1,
+def plot_trajectories(ts, trajectories, axis=None, max_trajectories=50):
+    mean, std = np.mean(trajectories, axis=0), np.std(trajectories, axis=0)
+
+    if axis is None:
+        plt.figure(figsize=(12, 8))
+        axis = plt.gca()
+
+    for t in trajectories[0:max_trajectories]:
+        axis.plot(ts, t, linewidth=0.7, label='_nolegend_')
+    subplot_mean_and_std(axis, ts, mean, 2*std)
+
+    axis.legend(['Mean trajectory', '$\pm$ 2 * standard deviation'])
+    axis.set_xlabel("t")
+    axis.set_ylabel("W(t)")
+
+def estimate_covariance(fixed_t=0.25, t0=0, t1=1, delta_t=0.001, n_processes=100):
+    ts, trayectories = simulate_wiener_process(
+        t0=t0, t1=t1, delta_t=delta_t, n_processes=n_processes)
+
+    fixed_index = np.where( np.abs(ts-fixed_t) < 1e-10 )[0][0]
+    fixed_time_samples = trayectories.T[fixed_index]
+    fixed_time_samples -= np.mean(fixed_time_samples)
+    cov = [ np.mean( fixed_time_samples * (time_sample - np.mean(time_sample)))
+            for time_sample in trayectories.T]
+
+    return ts, cov
+
+
+def plot_estimated_covariance(fixed_t=0.25, t0=0, t1=1,
                               delta_t=0.001, n_processes=100, n_estimations=100):
-    t =  np.arange(t0, t1, delta_t)
+    t, _ = estimate_covariance(fixed_t=fixed_t, t0=t0, t1=t1, delta_t=delta_t, n_processes=1)
     cov_estimations = [
-        estimate_covariance(fixed_t=fixed_t, initial_value=initial_value,
+        estimate_covariance(fixed_t=fixed_t,
                             t0=t0, t1=t1, delta_t=delta_t, n_processes=n_processes)[1]
         for _ in range(n_estimations)
     ]
     cov_mean, cov_std = np.mean(cov_estimations, axis=0), np.std(cov_estimations, axis=0)
-    
+
     # Plotting
     plt.figure(figsize=(12, 8))
+    plt.plot([0, fixed_t, 1], [0, fixed_t, fixed_t], color='red')
     subplot_mean_and_std(plt.gca(), t, cov_mean, cov_std, xlims=[0,1],
                          xlabel='t', ylabel='Cov[ W(t), W({}) ]'.format(fixed_t))
-    plt.plot([0, fixed_t, 1], [0, fixed_t, fixed_t], color='red')
+    plt.legend(['Theorical covariance', 'Mean empirical covariance',
+                '$\pm$ standard deviation'], loc='lower right')
+
+    
+# ---------------------------------------- EXERCISE 7 ----------------------------------------
+
+def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None):
+    if axis is None:
+        plt.figure(figsize=(12, 8))
+        axis = plt.gca()
+
+    # Plot histogram
+    n_bins = np.min((np.int(np.round(np.sqrt(len(X)))), max_bins))
+    axis.hist(X, bins=n_bins, density=True, color=COLOR1, alpha=0.3)
+    axis.set_xlabel('x')
+    axis.set_ylabel('pdf(x)')
+    if hist_xlims is not None:
+        axis.set_xlim(hist_xlims)
+    
+    # Compare with exact distribution
+    n_plot = 1000
+    X_from, X_to = np.min(X), np.max(X)
+    if hist_xlims is not None:
+        X_from, X_to = hist_xlims
+    x_plot = np.linspace(X_from, X_to, n_plot)
+    y_plot = pdf(x_plot)
+    axis.plot(x_plot, y_plot, linewidth=2, color=COLOR2)
+    axis.legend(['Theorical distribution', 'Empirical histogram'])
+
+def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, hist_xlims=None):
+    fig, axis = plt.subplots(1, 2, figsize=(15, 8))
+    fixed_time = ts[fixed_t_index]
+
+    # Plot the trajectories
+    plot_trajectories(ts, trayectories, axis=axis[0])
+    axis[0].axvline(x=fixed_time, color=COLOR2)
+    axis[0].legend(['Mean trajectory', 't = {:.2f}'.format(fixed_time),
+                    '$\pm$ 2 * standard deviation'])
+
+    # Plot the histogram
+    mu, std = 0, np.sqrt(fixed_time)
+    normal_pdf = lambda x: stats.norm(mu, scale=std).pdf(x)
+    plot_hist_and_pdf(trayectories[:, fixed_t_index], normal_pdf,
+                        axis=axis[1], hist_xlims=hist_xlims)
+
+    fig.suptitle('Trajectories and histogram for t={:.2f}'.format(fixed_time))
+
+
+    

@@ -26,9 +26,7 @@ def plot_trajectories(t, X,
   
     plt.plot(t, np.mean(X, axis=0), linewidth=3, color=mean_color)
   
-    
-  
-    
+
 def plot_pdf(X, pdf,
              max_bins=50,
              fig_num=1, fig_size=(4,4), font_size=10):
