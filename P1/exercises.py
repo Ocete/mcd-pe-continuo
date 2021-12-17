@@ -404,7 +404,7 @@ def plot_estimated_covariance(fixed_t=0.25, t0=0, t1=1,
     
 # ---------------------------------------- EXERCISE 7 ----------------------------------------
 
-def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None):
+def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None,hist_y = None):
     """[summary]
 
     Parameters
@@ -490,7 +490,7 @@ def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, fig=None, axis=N
             pdf = lambda x: stats.norm(mu, scale=std).pdf(x)\
     
     plot_hist_and_pdf(trayectories[:, fixed_t_index], pdf,
-                        axis=axis[1], xlims=hist_xlims, ylims=hist_ylims)
+                        axis=axis[1], hist_xlims=hist_xlims, hist_ylims=hist_ylims)
     fig.suptitle('Trajectories and histogram for t={:.2f}'.format(fixed_time))
 
 # ---------------------------------------- EXERCISE 8 ----------------------------------------
