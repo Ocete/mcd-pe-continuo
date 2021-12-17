@@ -8,6 +8,7 @@ from scipy.special import factorial, i0
 from scipy import stats
 from collections import Counter
 from sklearn.neighbors import KernelDensity
+from matplotlib.animation import FuncAnimation
 
 COLOR1 = '#1f77b4'
 COLOR2 = '#ff7f0e'
@@ -51,7 +52,7 @@ def exercise_1(t=2, max_n=40, lamb=10, n_samples=10**4):
     # Plotting
     width = 0.35
     plt.figure(figsize=(10, 6))
-    plt.bar(ns - width/2, y_theoretical, width, label='Theorical')
+    plt.bar(ns - width/2, y_theoretical, width, label='Theoretical')
     plt.bar(ns + width/2, y_simulated, width, label='Simulated')
 
     plt.xlabel('n')
@@ -63,7 +64,7 @@ def exercise_1(t=2, max_n=40, lamb=10, n_samples=10**4):
 
 def plot_kde_in_axis(axis, ts, pdf, pdf_kde, samples, lamb, n):
     # Plot pdf and estimation
-    axis.fill_between(ts, pdf, alpha=0.3, color='C0', label='Theorical')
+    axis.fill_between(ts, pdf, alpha=0.3, color='C0', label='Theoretical')
     axis.plot(ts, pdf_kde, color='C1', label='Kernel density estimation')
 
     # Plot little x's near the X axis
@@ -80,7 +81,7 @@ def exercise_2(ns=[1,2,5,10], lamb=5, max_t=7, n_samples_kde=10**4, kde_bandwidt
     _, axis = plt.subplots(2, 2, figsize=(18, 12))
 
     for ax, n in zip(axis.flatten(), ns):
-        # Theorical
+        # Theoretical
         sn_pdf = stats.erlang.pdf(ts, a=n, scale=1/lamb)
 
         # Kernel Density Estimation
@@ -185,7 +186,7 @@ def plot_estimated_covariance(fixed_t=0.25, t0=0, t1=1,
     plt.plot([0, fixed_t, 1], [0, fixed_t, fixed_t], color='red')
     subplot_mean_and_std(plt.gca(), t, cov_mean, cov_std, xlims=[0,1],
                          xlabel='t', ylabel='Cov[ W(t), W({}) ]'.format(fixed_t))
-    plt.legend(['Theorical covariance', 'Mean empirical covariance',
+    plt.legend(['Theoretical covariance', 'Mean empirical covariance',
                 '$\pm$ standard deviation'], loc='lower right')
 
     
@@ -212,9 +213,9 @@ def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None):
     x_plot = np.linspace(X_from, X_to, n_plot)
     y_plot = pdf(x_plot)
     axis.plot(x_plot, y_plot, linewidth=2, color=COLOR2)
-    axis.legend(['Theorical distribution', 'Empirical histogram'])
+    axis.legend(['Theoretical distribution', 'Empirical histogram'])
 
-def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, hist_xlims=None):
+def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, pdf = None ,hist_xlims=None):
     fig, axis = plt.subplots(1, 2, figsize=(15, 8))
     fixed_time = ts[fixed_t_index]
 
@@ -225,12 +226,36 @@ def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, hist_xlims=None)
                     '$\pm$ 2 * standard deviation'])
 
     # Plot the histogram
-    mu, std = 0, np.sqrt(fixed_time)
-    normal_pdf = lambda x: stats.norm(mu, scale=std).pdf(x)
+    
+
+    if pdf == None:
+        mu, std = 0, np.sqrt(fixed_time)
+        normal_pdf = lambda x: stats.norm(mu, scale=std).pdf(x)
+    else:
+        normal_pdf = pdf
+    
     plot_hist_and_pdf(trayectories[:, fixed_t_index], normal_pdf,
                         axis=axis[1], hist_xlims=hist_xlims)
 
     fig.suptitle('Trajectories and histogram for t={:.2f}'.format(fixed_time))
 
+    # Maybe needed for animation
+    #return fig
+
 
     
+# ---------------------------------------- EXERCISE 8 ----------------------------------------
+
+def brownian_animation(B0 = 0, max_t = 1,max_M = 10000, max_N = 1000 ):
+
+    fig, ax = plt.subplots(1,2)
+
+    Ms = np.arange(1,max_M+1,1)
+    #proc = [bm_sim.simulate_arithmetic_BM(t0 = 0, B0 = B0, T = 1, mu = 0, sigma = np.sqrt(max_t), M_i, N = max_N) for M_i in Ms]
+
+    def init_func():
+        ax.clear()
+
+    def update_plot(i):
+        ax.clear()
+        ax.plot()
