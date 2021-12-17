@@ -93,8 +93,7 @@ def plot_kde_in_axis(axis, ts, pdf, pdf_kde, samples, lamb, n):
 
         Example
         -------
-        
-        
+        See function exercise_2() for an example.
     """
     # Plot pdf and estimation
     axis.fill_between(ts, pdf, alpha=0.3, color='C0', label='Theoretical')
@@ -657,6 +656,11 @@ def plot_trajectories_animation(ts, trajectories, n_frames=10,
     Returns
     -------
     No returns, it fills the axis
+    
+    Example
+    -------
+    >>> ts, trajectories = ex.simulate_wiener_process(n_processes=1000)
+    >>> plot_trajectories_animation(ts, trajectories, n_frames=20, gif_name='wiener')
     """
     plt.rc('figure', figsize=(20, 6))
     fig, ax = plt.subplots(1, 2)
