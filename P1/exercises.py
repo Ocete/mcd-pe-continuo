@@ -39,7 +39,7 @@ def exercise_1(t=2, max_n=40, lamb=10, n_samples=10**4):
 
         Example
         -------
-        exercise_1()
+        >>> exercise_1()
     """
     # Theoretical
     ns = np.arange(max_n+1) * 1.0
@@ -66,22 +66,24 @@ def exercise_1(t=2, max_n=40, lamb=10, n_samples=10**4):
 
 def plot_kde_in_axis(axis, ts, pdf, pdf_kde, samples, lamb, n):
     """
-        Function to plot kernel estimation of the n-th arrival of a Poisson process and theoretical density, along with generated samples for the estimation.
+        Function to plot kernel estimation of the n-th arrival of a Poisson
+        process andtheoretical density, along with generated samples
+        for the estimation.
     
         Parameters
         ----------
         axis : matplotlib.axes
             Matplotlib axes of a figure to plot the charts
         ts : numpy.ndarray
-            Array of the times uses for the plot
+            Array of times uses for the plot
         pdf: function
-            Theoretical pdf of the n-th arrival of a Poisson process
+            Theoretical pdf values of the n-th arrival of a Poisson process
         pdf_kde: function
-            Estimated pdf of the n-th arrival of a Poisson process
+            Estimated pdf values of the n-th arrival of a Poisson process
         samples : numpy.ndarray
             Array with the generated arrival times
         lamb : float
-            Lambda parameter of the Poisosn process
+            Lambda parameter of the Poisson process
         n : int
             Number of arrivals estimated
             
@@ -91,6 +93,7 @@ def plot_kde_in_axis(axis, ts, pdf, pdf_kde, samples, lamb, n):
 
         Example
         -------
+        
         
     """
     # Plot pdf and estimation
@@ -108,8 +111,11 @@ def plot_kde_in_axis(axis, ts, pdf, pdf_kde, samples, lamb, n):
 
 def exercise_2(ns=[1,2,5,10], lamb=5, max_t=7, n_samples_kde=10**4, kde_bandwidth=0.1):
     """
-        Implements the whole exercise 2, in which we try to find the differences between the kernel density estimation and the theoretical 
-        Function to plot kernel estimation of the n-th arrival of a Poisson process and theoretical density, along with generated samples for the estimation.
+        Implements the whole exercise 2, in which we try to find
+        the differences between the kernel density estimation and the
+        theoretical. Function to plot kernel estimation of the
+        n-th arrival of a Poisson process and theoretical density,
+        along with generated samples for the estimation.
     
         Parameters
         ----------
@@ -124,7 +130,7 @@ def exercise_2(ns=[1,2,5,10], lamb=5, max_t=7, n_samples_kde=10**4, kde_bandwidt
         samples : numpy.ndarray
             Array with the generated arrival times
         lamb : float
-            Lambda parameter of the Poisosn process
+            Lambda parameter of the Poisson process
         n : int
             Number of arrivals estimated
             
@@ -134,7 +140,7 @@ def exercise_2(ns=[1,2,5,10], lamb=5, max_t=7, n_samples_kde=10**4, kde_bandwidt
 
         Example
         -------
-        
+        >>> exercise_2()
     """
     ts = np.arange(max_t, step=0.01)
     _, axis = plt.subplots(2, 2, figsize=(18, 12))
@@ -155,23 +161,30 @@ def exercise_2(ns=[1,2,5,10], lamb=5, max_t=7, n_samples_kde=10**4, kde_bandwidt
 # ---------------------------------------- EXERCISE 4 ----------------------------------------
 
 def simulate_team_scores(t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
-    """[summary]
+    """
+
+    Simulates n_samples games between the two teams. 
 
     Parameters
     ----------
     t : int, optional
-        [description], by default 90
+        Array of the times uses for the plot
     lamb1 : float, optional
-        [description], by default 0.02
+        Lambda parameter of the first Poisson process
     lamb2 : float, optional
-        [description], by default 0.03
-    n_samples : [type], optional
-        [description], by default 10**5
+        Lambda parameter of the second Poisson process
+    n_samples : int, optional
+        Number of games estimated estimated
 
     Returns
     -------
-    [type]
-        [description]
+    numpy.ndarray
+        2d-array where each row is a game with two values, the scores for
+        teams A and B respectively
+        
+    Example
+    -------
+    >>> simuations = simulate_team_scores()
     """
     return [ 
         [ len(arrival_times1), len(arrival_times2) ]
@@ -181,27 +194,37 @@ def simulate_team_scores(t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
     ]
 
 def estimate_prob(condition, t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5, seed=123):
-    """[summary]
+    """
+    Estimates the probability of the given condition being fullfilled
+    in a random match between the two teams. It simulates n_samples games
+    and return the proportion on games that passed the condition.
 
     Parameters
     ----------
-    condition : [type]
-        [description]
+    condition : lambda function
+        Condition to apply to the games, recieves 2 values (the scores)
+        and returns a boolean whether the condition was fullfilled.
     t : int, optional
-        [description], by default 90
+        Array of the times uses for the plot
     lamb1 : float, optional
-        [description], by default 0.02
+        Lambda parameter of the first Poisson process
     lamb2 : float, optional
-        [description], by default 0.03
-    n_samples : [type], optional
-        [description], by default 10**5
+        Lambda parameter of the second Poisson process
+    n_samples : int, optional
+        Number of games estimated estimated
     seed : int, optional
-        [description], by default 123
+        seed to fix on numpy.random
 
     Returns
     -------
-    [type]
-        [description]
+    float
+        An estimation of the probability of the given condition being
+        fullfilled.
+        
+    Example
+    -------
+    >>> tie_on_0 = lambda x: x[0] == 0 and x[1] == 0
+    >>> estimate_prob(tie_on_0)
     """
     np.random.seed(seed)
     scores = simulate_team_scores(t=t, lamb1=lamb1, lamb2=lamb2, n_samples=n_samples)
@@ -209,23 +232,31 @@ def estimate_prob(condition, t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5, seed
     return 1.0*fullfil_condition / len(scores)
 
 def team_B_scores_first_prob(t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
-    """[summary]
+    """
+    Estimates the probability of team B scoring first by simulating
+    n_samples games and returning the proportion of games that satisfy
+    the condition.
 
     Parameters
     ----------
     t : int, optional
-        [description], by default 90
+        Array of the times uses for the plot
     lamb1 : float, optional
-        [description], by default 0.02
+        Lambda parameter of the first Poisson process
     lamb2 : float, optional
-        [description], by default 0.03
-    n_samples : [type], optional
-        [description], by default 10**5
+        Lambda parameter of the second Poisson process
+    n_samples : int, optional
+        Number of games estimated estimated
 
     Returns
     -------
-    [type]
-        [description]
+    float
+        An estimation of the probability of the given condition being
+        fullfilled.
+        
+    Example
+    -------
+    >>> team_B_scores_first_prob()
     """
     count = 0
     for arrival_times1, arrival_times2 \
@@ -245,23 +276,32 @@ def team_B_scores_first_prob(t=90, lamb1=0.02, lamb2=0.03, n_samples=10**5):
 # ---------------------------------------- EXERCISE 6 ----------------------------------------
 
 def simulate_wiener_process(t0=0, t1=1, delta_t=0.001, n_processes=100):
-    """[summary]
+    """
+    Simulates n_processes wiener processes.
 
     Parameters
     ----------
-    t0 : int, optional
-        [description], by default 0
-    t1 : int, optional
-        [description], by default 1
+    t0 : float, optional
+        Initial time
+    t1 : float, optional
+        Final time
     delta_t : float, optional
-        [description], by default 0.001
+        Time increment
     n_processes : int, optional
-        [description], by default 100
+        Number of processes to be simulated
 
     Returns
     -------
-    [type]
-        [description]
+    numpy.ndarray
+        The array of times when the simulations took place.
+    numpy.ndarray
+        A 2d-array containing the simulations. Each row corresponds
+        to a simulated processed, and has the same length and the
+        array of times also returned.
+        
+    Example
+    -------   
+    >>> ts, trajectories = simulate_wiener_process(n_processes=1000)
     """
     n_steps = int((t1-t0) / delta_t)
     return bm_sim.simulate_arithmetic_BM(t0, B0=0, T=t1-t0, mu=0, sigma=1,
@@ -270,32 +310,44 @@ def simulate_wiener_process(t0=0, t1=1, delta_t=0.001, n_processes=100):
 def subplot_mean_and_std(axis, x, mean, std, color=COLOR1,
                          xlims=None, ylims=None, xlabel=None,
                          ylabel=None, title=None, alpha_std=.3):
-    """[summary]
+    """
+    Plots the passed mean and std.
 
     Parameters
     ----------
-    axis : [type]
-        [description]
-    x : [type]
-        [description]
-    mean : [type]
-        [description]
-    std : [type]
-        [description]
-    color : [type], optional
-        [description], by default COLOR1
-    xlims : [type], optional
-        [description], by default None
-    ylims : [type], optional
-        [description], by default None
-    xlabel : [type], optional
-        [description], by default None
-    ylabel : [type], optional
-        [description], by default None
-    title : [type], optional
-        [description], by default None
+    axis : matplotlib.pyplot.axis
+        axis to plot on
+    x : numpy.ndarray
+        x-component to plot
+    mean : numpy.ndarray
+        mean of the y-component to plot
+    std : numpy.ndarray
+        std of the y-component to plot
+    color : string, optional
+        Color to plot the mean and std on
+    xlims : numpy.ndarray, optional
+        xlims for the plot
+    ylims : numpy.ndarray, optional
+        xlims for the plot
+    xlabel : string, optional
+        xlabel for the plot
+    ylabel : string, optional
+        ylabel for the plot
+    title : string, optional
+        Title for the plot
     alpha_std : float, optional
-        [description], by default .3
+        Alpha of the std-filling color
+        
+    Returns
+    -------
+    No returns, it fills the axis
+    
+    Example
+    -------
+    >>> simulate_wiener_process(n_processes=1000)
+    >>> mean, std = np.mean(trajectories, axis=0), np.std(trajectories, axis=0)
+    >>> fig, axis = plt.figure(figsize=(12, 8))
+    >>> subplot_mean_and_std(axis, ts, mean, 2*std)
     """                         
     axis.plot(x, mean, color='b')
     axis.fill_between(x, mean-std, mean+std, color=color, alpha=alpha_std)
@@ -306,18 +358,29 @@ def subplot_mean_and_std(axis, x, mean, std, color=COLOR1,
     if title is not None: axis.set_title(title)    
 
 def plot_trajectories(ts, trajectories, axis=None, max_trajectories=50):
-    """[summary]
+    """
+    Plots at most max_trajectories of the given trajectories,
+    along with the mean and std of all the trajectories.
 
     Parameters
     ----------
-    ts : [type]
-        [description]
-    trajectories : [type]
-        [description]
-    axis : [type], optional
-        [description], by default None
+    ts : numpy.ndarray
+        Vector of times where the trajectories happened
+    trajectories : numpy.ndarray
+        2d-array containing all the trajectories
+    axis : matplotlib.pyplot.axis, optional
+        Axis to plot on
     max_trajectories : int, optional
-        [description], by default 50
+        Max number of trajectories to plot
+        
+    Returns
+    -------
+    No returns, it fills the axis
+    
+    Example
+    -------
+    >>> ts, trajectories = simulate_wiener_process(n_processes=1000)
+    >>> plot_trajectories(axis, ts)
     """
     mean, std = np.mean(trajectories, axis=0), np.std(trajectories, axis=0)
 
@@ -334,56 +397,76 @@ def plot_trajectories(ts, trajectories, axis=None, max_trajectories=50):
     axis.set_ylabel("W(t)")
 
 def estimate_covariance(fixed_t=0.25, t0=0, t1=1, delta_t=0.001, n_processes=100):
-    """[summary]
+    """
+    Estimates the covariance of a wiener process between the fixed time
+    and times from t0 to t1.
 
     Parameters
     ----------
     fixed_t : float, optional
-        [description], by default 0.25
-    t0 : int, optional
-        [description], by default 0
-    t1 : int, optional
-        [description], by default 1
+        Fixed time to compute the covariance against
+    t0 : float, optional
+        Initial time
+    t1 : float, optional
+        Final time
     delta_t : float, optional
-        [description], by default 0.001
+        Time increment
     n_processes : int, optional
-        [description], by default 100
+        Number of trajectories to simulate
 
     Returns
     -------
-    [type]
-        [description]
+    numpy.ndarray
+        The array of times when the simulations took place.
+    numpy.ndarray
+        An array containing in position i Cov( W(t_i), W(fixed_t) )
+        
+    Example
+    -------
+    >>> estimate_covariance()
     """
-    ts, trayectories = simulate_wiener_process(
+    ts, trajectories = simulate_wiener_process(
         t0=t0, t1=t1, delta_t=delta_t, n_processes=n_processes)
 
     fixed_index = np.where( np.abs(ts-fixed_t) < 1e-10 )[0][0]
-    fixed_time_samples = trayectories.T[fixed_index]
+    fixed_time_samples = trajectories.T[fixed_index]
     fixed_time_samples -= np.mean(fixed_time_samples)
     cov = [ np.mean( fixed_time_samples * (time_sample - np.mean(time_sample)))
-            for time_sample in trayectories.T]
+            for time_sample in trajectories.T]
 
     return ts, cov
 
 
 def plot_estimated_covariance(fixed_t=0.25, t0=0, t1=1,
                               delta_t=0.001, n_processes=100, n_estimations=100):
-    """[summary]
+    """
+    Plots a estimation (mean and std) of the covariance of a wiener process.
+    For time t in [t0, t1], plots the estimated covariance between W(t) and
+    W(fixed_t).
 
     Parameters
     ----------
     fixed_t : float, optional
-        [description], by default 0.25
-    t0 : int, optional
-        [description], by default 0
-    t1 : int, optional
-        [description], by default 1
+        Fixed time to compute the covariance against
+    t0 : float, optional
+        Initial time
+    t1 : float, optional
+        Final time
     delta_t : float, optional
-        [description], by default 0.001
+        Time increment
     n_processes : int, optional
-        [description], by default 100
+        Number of trajectories to simulate
     n_estimations : int, optional
-        [description], by default 100
+        Number of times the n_processes are simulated for
+        the estimation
+
+    Returns
+    -------
+    No returns, it fills the axis
+    
+    Example
+    -------
+    >>> plot_estimated_covariance()
     """
     t, _ = estimate_covariance(fixed_t=fixed_t, t0=t0, t1=t1, delta_t=delta_t, n_processes=1)
     cov_estimations = [
@@ -404,21 +487,34 @@ def plot_estimated_covariance(fixed_t=0.25, t0=0, t1=1,
     
 # ---------------------------------------- EXERCISE 7 ----------------------------------------
 
-def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None,hist_y = None):
-    """[summary]
+def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50,
+                      xlims=None, ylims=None):
+    """
+    Plots the histogam and the theorical pdf of the given data
+    in the given axis.
 
     Parameters
     ----------
-    X : [type]
-        [description]
-    pdf : [type]
-        [description]
-    axis : [type], optional
-        [description], by default None
+    X : numpy.ndarray
+        An array containing the data to histogram
+    pdf : function
+        pdf function to evaluate
+    axis : matplotlib.pyplot.axis, optional
+        Axis to plot on
     max_bins : int, optional
-        [description], by default 50
-    hist_xlims : [type], optional
-        [description], by default None
+        Max number of bins to plot
+    xlims : numpy.ndarray, optional
+        xlims for the plot
+    ylims : numpy.ndarray, optional
+        xlims for the plot
+        
+    Returns
+    -------
+    No returns, it fills the axis
+    
+    Example
+    -------
+    See function plot_trajectories_and_hist() for an example
     """
     if axis is None:
         plt.figure(figsize=(12, 8))
@@ -447,86 +543,135 @@ def plot_hist_and_pdf(X, pdf, axis=None, max_bins=50, hist_xlims=None,hist_y = N
     axis.legend(['Theoretical distribution', 'Empirical histogram'])
         
 
-def plot_trajectories_and_hist(ts, trayectories, fixed_t_index, fig=None, axis=None,
-                                pdf=None, hist_xlims=None, hist_ylims=None):
-    """[summary]
+def plot_trajectories_and_hist(ts, trajectories, fixed_t_index, fig=None, axis=None, pdf=None,
+                                B0=0, BM_mu=0, BM_sigma=1, hist_xlims=None, hist_ylims=None):
+    """
+    Graphs a 2-plots subplot with the trajectories and the histogram
+    at a given fixed_t_index time
 
     Parameters
     ----------
-    ts : [type]
-        [description]
-    trayectories : [type]
-        [description]
-    fixed_t_index : [type]
-        [description]
-    fig : [type], optional
-        [description], by default None
-    axis : [type], optional
-        [description], by default None
-    pdf : [type], optional
-        [description], by default None
-    hist_xlims : [type], optional
-        [description], by default None
-    hist_ylims : [type], optional
-        [description], by default None
+    ts : numpy.ndarray
+        Vector of times where the trajectories happened
+    trajectories : numpy.ndarray
+        2d-array containing all the trajectories
+    fixed_t_index : int
+        Index refering to the fixed time whose histogram
+        will be plotted.
+    fig : matplotlib.figure.Figure, optional
+        Figure to plot on
+    axis : matplotlib.pyplot.axis, optional
+        Axis to plot on
+    pdf : function
+        pdf function to evaluate for the histogram
+    B0 : float, optional
+        B0 value for the brownian motion, in case we want to
+        represent that
+    BM_mu : float, optional
+        mu value for the brownian motion, in case we want to
+        represent that
+    BM_sigma : float, optional
+        sigma value for the brownian motion, in case we want to
+        represent that
+    hist_xlims : numpy.ndarray, optional
+        xlims for the plot
+    hist_ylims : numpy.ndarray, optional
+        xlims for the plot
+        
+    Returns
+    -------
+    No returns, it fills the axis
+    
+    Example
+    ------
+    >>> ts, trajectories = ex.simulate_wiener_process(n_processes=1000)
+    >>> plot_trajectories_and_hist(ts, trajectories, 25)
     """
     if fig is None or axis is None:
-        fig, axis = plt.subplots(1, 2, figsize=(15, 8))
+        fig, axis = plt.subplots(1, 2, figsize=(20, 6))
     fixed_time = ts[fixed_t_index]
 
     # Plot the trajectories
-    plot_trajectories(ts, trayectories, axis=axis[0])
+    plot_trajectories(ts, trajectories, axis=axis[0])
     axis[0].axvline(x=fixed_time, color=COLOR2)
     axis[0].legend(['Mean trajectory', 't = {:.2f}'.format(fixed_time),
                     '$\pm$ 2 * standard deviation'])
 
-    # Plot the histogram
+    # Define the pdf for the Wiener and Brownian motions 
     if pdf is None:
-        mu, std = 0, np.sqrt(fixed_time)
-        if std == 0:
+        pdf_mu, pdf_std = B0 + BM_mu*(fixed_time-ts[0]), BM_sigma*np.sqrt(fixed_time-ts[0])
+        if pdf_std == 0:
             # Dirac's delta centered on mu
-            pdf = lambda x: x == mu
+            pdf = lambda x: x == pdf_mu
         else:
-            pdf = lambda x: stats.norm(mu, scale=std).pdf(x)\
+            pdf = lambda x: stats.norm(pdf_mu, scale=pdf_std).pdf(x)
     
-    plot_hist_and_pdf(trayectories[:, fixed_t_index], pdf,
-                        axis=axis[1], hist_xlims=hist_xlims, hist_ylims=hist_ylims)
+    # Plot the histogram
+    plot_hist_and_pdf(trajectories[:, fixed_t_index], pdf,
+                        axis=axis[1], xlims=hist_xlims, ylims=hist_ylims)
     fig.suptitle('Trajectories and histogram for t={:.2f}'.format(fixed_time))
 
 # ---------------------------------------- EXERCISE 8 ----------------------------------------
 
-def plot_trajectories_animation(ts, trayectories, n_frames=10, hist_pdf=None, hist_xlims=[-2,2], hist_ylims=[0,2]):
-    """[summary]
+def plot_trajectories_animation(ts, trajectories, n_frames=10,
+                                hist_xlims=[-2,2], hist_ylims=[0,2], gif_name='',
+                                B0=0, BM_mu=0, BM_sigma=1, save_gif=False):
+    """
+    Creates and saves an animation of n_frames with the given trayectories.
+    It plots using plot_trajectories_and_hist at different times.
+    
+    Drawback of using celluloid library:
+    - Lims must be fixed for the whole animation, the will be the lims of the last
+        figure plotted.
+    - Legends are acummulative. This issue, summed up with the matplotlib.fill_between
+        legend beeing always the last legend to be added means the legend of
+        matplotlib.fill_between is broken in this animation.
 
     Parameters
     ----------
-    ts : [type]
-        [description]
-    trayectories : [type]
-        [description]
+    ts : numpy.ndarray
+        Vector of times where the trajectories happened
+    trajectories : numpy.ndarray
+        2d-array containing all the trajectories
     n_frames : int, optional
-        [description], by default 10
-    hist_pdf : [type], optional
-        [description], by default None
-    hist_xlims : list, optional
-        [description], by default [-2,2]
-    hist_ylims : list, optional
-        [description], by default [0,2]
+        Number of frames in the animation
+    hist_pdf : function
+        pdf function to evaluate for the histogram
+    hist_xlims : numpy.ndarray, optional
+        xlims for the plot
+    hist_ylims : numpy.ndarray, optional
+        xlims for the plot
+    gif_name : string, optional
+        Name for the gif to be save
+    B0 : float, optional
+        B0 value for the brownian motion, in case we want to
+        represent that
+    BM_mu : float, optional
+        mu value for the brownian motion, in case we want to
+        represent that
+    BM_sigma : float, optional
+        sigma value for the brownian motion, in case we want to
+    save_gif : bool, optional
+        A boolean checking whether to save the animation or not
+        
+    Returns
+    -------
+    No returns, it fills the axis
     """
-    plt.rc('figure', figsize=(18, 10))
-    fig, ax = plt.subplots(2)
+    plt.rc('figure', figsize=(20, 6))
+    fig, ax = plt.subplots(1, 2)
     camera = Camera(fig)
     time_indexes = np.arange(0, len(ts), int(len(ts)/n_frames))
 
     for t_index in time_indexes:
-        plot_trajectories_and_hist(ts, trayectories, fixed_t_index=t_index,
-                                   fig=fig, axis=ax, pdf=hist_pdf,
+        plot_trajectories_and_hist(ts, trajectories, fixed_t_index=t_index,
+                                   fig=fig, axis=ax,
+                                   B0=B0, BM_mu=BM_mu, BM_sigma=BM_sigma,
                                    hist_xlims=hist_xlims, hist_ylims=hist_ylims)
         camera.snap()
-        #ax[0].clear()
-        #ax[1].clear()
     fig.suptitle('Trajectories and histogram for t $\in$[0, {:.1f}]'.format(ts[-1]))
         
     animation = camera.animate()
-    animation.save('animation.gif', writer='Pillow')
+    if save_gif:
+        animation.save('{}.gif'.format(gif_name), writer='pillow')
     plt.close()
