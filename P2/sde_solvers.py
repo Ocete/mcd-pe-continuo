@@ -7,6 +7,8 @@ Created on Sun Sep 27 17:29:26 2020
 # Load packages
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
+from numpy.core.shape_base import _accumulate
 
 def euler_maruyana(t0, x0, T, a, b, M, N):
     """ Numerical integration of an SDE using the stochastic Euler scheme
@@ -29,7 +31,7 @@ def euler_maruyana(t0, x0, T, a, b, M, N):
     M: int
         Number of trajectories in simulation
     N: int
-        Number of intervals for the simulation
+        Number of steps for the simulation
 
     Returns
     -------
@@ -56,8 +58,20 @@ def euler_maruyana(t0, x0, T, a, b, M, N):
     >>> _= plt.title('Geometric BM (Euler scheme)')
 
     """
-    sys.exit('euler_maruyana not implemented')
-
+    # Initialize trayectories using x0 and the rest of the variables.
+    trajectories = np.tile(x0, (M, N+1))
+    delta_t = 1.0 * T / N
+    sqrt_delta_t = np.sqrt(delta_t)
+    times = np.array([t0 + delta_t*i for i in range(N+1)])
+    noise = np.random.randn(M, N)
+    
+    # Traverse the trajectories columns except the last one.
+    # I.e., x will be a vector with all the trajectories at time t,
+    # and z a vector will the noise at time t.
+    for idx, (t, x, z) in enumerate(zip(times[:-1], trajectories.T[:-1], noise.T)):
+        trajectories.T[idx+1] = x + a(t, x) * delta_t + z * b(t, x) * sqrt_delta_t
+        
+    return times, trajectories
 
 
 def milstein(t0, x0, T, a, b, db_dx, M, N):
@@ -78,12 +92,12 @@ def milstein(t0, x0, T, a, b, db_dx, M, N):
         Function a(t, x(t)) that characterizes the drift term
     b :
         Function b(t, x(t)) that characterizes the diffusion term
-    db_dx:
-        Derivative wrt the second argument of b(t, x)
+    db_dx :
+        Function db_dx(t, x(t)), derivative wrt the second argument of b(t, x)
     M: int
         Number of trajectories in simulation
     N: int
-        Number of intervals for the simulation
+        Number of steps for the simulation
 
     Returns
     -------
@@ -111,7 +125,20 @@ def milstein(t0, x0, T, a, b, db_dx, M, N):
     >>> _= plt.title('Geometric BM (Milstein scheme)')
 
     """
-    sys.exit('milstein not implemented')
+    # Initialize trayectories using x0 and the rest of the variables.
+    trajectories = np.tile(x0, (M, N+1))
+    delta_t = 1.0 * T / N
+    sqrt_delta_t = np.sqrt(delta_t)
+    times = np.array([t0 + delta_t*i for i in range(N+1)])
+    noise = np.random.randn(M, N)
+    
+    # Traverse the trajectories columns except the last one.
+    # I.e., x will be a vector with all the trajectories at time t,
+    # and z a vector will the noise at time t.
+    for idx, (t, x, z) in enumerate(zip(times[:-1], trajectories.T[:-1], noise.T)):
+        trajectories.T[idx+1] = x + a(t, x) * delta_t + z * b(t, x) * sqrt_delta_t \
+            + 0.5 * b(t, x) * db_dx(t, x) * (z**2 - 1) * delta_t
+    return times, trajectories
 
 
 def simulate_jump_process(t0, T, simulator_arrival_times, simulator_jumps, M):
@@ -177,7 +204,7 @@ def euler_jump_diffusion(t0, x0, T, a, b, c,
     M: int
         Number of trajectories in simulation
     N: int
-        Number of intervals for the simulation
+        Number of steps for the simulation
 
     Returns
     -------
@@ -187,7 +214,100 @@ def euler_jump_diffusion(t0, x0, T, a, b, c,
         Simulation consisting of M trajectories.
         Each trajectory is a row vector composed of the
         values of the process at t
+    """    
+    # Initialize trayectories using x0 and the rest of the variables.
+    trajectories = np.tile(x0, (M, N+1))
+    delta_t = 1.0 * T / N
+    sqrt_delta_t = np.sqrt(delta_t)
+    times = np.array([t0 + delta_t*i for i in range(N+1)])
+    noise = np.random.randn(M, N)
+    
+    # Simulate the jump processes
+    times_of_jumps, sizes_of_jumps = simulator_jump_process(t0, T, M)
+    
+    # 
+    for traj_index in range(M):
+        jump_index = 0
+        max_n_jumps = len(times_of_jumps[traj_index])
+        for t_index, t in enumerate(times[:-1]):
+            # Obtain the previous value
+            x_n = trajectories[traj_index, t_index]
+            
+            # Compute the jumping value from t_n to t_n+1
+            # Multiple jumps might have happened in this interval
+            while jump_index <= max_n_jumps and \
+                    times_of_jumps[traj_index, jump_index] < times[t_index]:
+                jump_time = times_of_jumps[traj_index, jump_index]
+                x_n += c(jump_time, x_n) * sizes_of_jumps[traj_index, jump_index]
+                jump_index += 1
+            
+            # Compute the next value of the trajectory
+            trajectories[traj_index, t_index+1] = trajectories[traj_index, t_index] + \
+                                                a(t, x) * delta_t
+            
+        trajectories.T[idx+1] = x + a(t, x) * delta_t + z * b(t, x) * sqrt_delta_t
+            
+        
+        for idx, (t, x, z) in enumerate(zip(times[:-1], trajectories.T[:-1], noise.T)):
+            trajectories.T[idx+1] = x + a(t, x) * delta_t + z * b(t, x) * sqrt_delta_t \
+                + 0.5 * b(t, x) * db_dx(t, x) * (z**2 - 1) * delta_t
+
+
+    print('No te olvides de recorrer el ultimo tiempo por si hay algun salto ahi!')
+
+
+
+    
+
+
+def subplot_mean_and_std(x, mean, std, fig_num=1, color='b',
+                         fill_color='#1f77b4',
+                         xlims=None, ylims=None, xlabel=None,
+                         ylabel=None, title=None, alpha_std=.3):
     """
-    sys.exit('euler_jump_diffusion not implemented')
+    Plots the passed mean and std.
 
-
+    Parameters
+    ----------
+    x : numpy.ndarray
+        x-component to plot
+    mean : numpy.ndarray
+        mean of the y-component to plot
+    std : numpy.ndarray
+        std of the y-component to plot
+    color : string, optional
+        Color to plot the mean on
+    color : string, optional
+        Color to plot the std on
+    xlims : numpy.ndarray, optional
+        xlims for the plot
+    ylims : numpy.ndarray, optional
+        xlims for the plot
+    xlabel : string, optional
+        xlabel for the plot
+    ylabel : string, optional
+        ylabel for the plot
+    title : string, optional
+        Title for the plot
+    alpha_std : float, optional
+        Alpha of the std-filling color
+        
+    Returns
+    -------
+    No returns, it fills the axis
+    
+    Example
+    -------
+    >>> simulate_wiener_process(n_processes=1000)
+    >>> mean, std = np.mean(trajectories, axis=0), np.std(trajectories, axis=0)
+    >>> fig, axis = plt.figure(figsize=(12, 8))
+    >>> subplot_mean_and_std(axis, ts, mean, 2*std)
+    """
+    plt.figure(fig_num)
+    plt.plot(x, mean, color=color)
+    plt.fill_between(x, mean-std, mean+std, color=fill_color, alpha=alpha_std)
+    if xlims is not None: plt.xlim(xlims)
+    if ylims is not None: plt.ylim(ylims)
+    if xlabel is not None: plt.xlabel(xlabel)
+    if ylabel is not None: plt.ylabel(ylabel)
+    if title is not None: plt.title(title)    
