@@ -10,6 +10,29 @@ import sys
 import matplotlib.pyplot as plt
 from numpy.core.shape_base import _accumulate
 
+def generate_regular_grid(t0, delta_t, N):
+    """Generates a regular grid of times.
+
+    Parameters
+    ----------
+    t0 : float
+        Initial time for the simulation
+    N: int
+        Number of steps for the simulation
+    delta_t: float
+        Step
+
+    Returns
+    -------
+    t: numpy.ndarray of shape (N+1,)
+        Regular grid of discretization times in [t0, t0+T]
+
+    Example
+    -------
+    >>> generate_regular_grid(0, 0.1, 100)
+    """
+    return np.array([t0 + delta_t*i for i in range(N+1)])
+
 def euler_maruyana(t0, x0, T, a, b, M, N):
     """ Numerical integration of an SDE using the stochastic Euler scheme
 
@@ -56,13 +79,12 @@ def euler_maruyana(t0, x0, T, a, b, M, N):
     >>> _= plt.xlabel('t')
     >>> _=  plt.ylabel('S(t)')
     >>> _= plt.title('Geometric BM (Euler scheme)')
-
     """
     # Initialize trayectories using x0 and the rest of the variables.
     trajectories = np.tile(x0, (M, N+1))
     delta_t = 1.0 * T / N
     sqrt_delta_t = np.sqrt(delta_t)
-    times = np.array([t0 + delta_t*i for i in range(N+1)])
+    times = generate_regular_grid(t0, delta_t, N)
     noise = np.random.randn(M, N)
     
     # Traverse the trajectories columns except the last one.
@@ -129,7 +151,7 @@ def milstein(t0, x0, T, a, b, db_dx, M, N):
     trajectories = np.tile(x0, (M, N+1))
     delta_t = 1.0 * T / N
     sqrt_delta_t = np.sqrt(delta_t)
-    times = np.array([t0 + delta_t*i for i in range(N+1)])
+    times =generate_regular_grid(t0, delta_t, N)
     noise = np.random.randn(M, N)
     
     # Traverse the trajectories columns except the last one.
@@ -188,7 +210,6 @@ def euler_jump_diffusion(t0, x0, T, a, b, c,
 
     [Itô SDE with a jump term]
 
-
     Parameters
     ----------
     t0 : float
@@ -208,56 +229,59 @@ def euler_jump_diffusion(t0, x0, T, a, b, c,
 
     Returns
     -------
-    t: numpy.ndarray of shape (N+1,)
-        Regular grid of discretization times in [t0,t1]
-    X: numpy.ndarray of shape (M,N+1)
+    t: numpy.ndarray of shape (N_t,)
+        Non-regular grid of discretization times in [t0,t1].
+        N_t is the number of jumps generated.
+    X: numpy.ndarray of shape (M, N_t)
         Simulation consisting of M trajectories.
         Each trajectory is a row vector composed of the
-        values of the process at t
-    """    
-    # Initialize trayectories using x0 and the rest of the variables.
-    trajectories = np.tile(x0, (M, N+1))
+        values of the process at t.
+    """
+    # Create a 2-d array with the times and the sizes of jumps (0 in this case)
     delta_t = 1.0 * T / N
     sqrt_delta_t = np.sqrt(delta_t)
-    times = np.array([t0 + delta_t*i for i in range(N+1)])
-    noise = np.random.randn(M, N)
+    original_times = np.array([generate_regular_grid(t0, delta_t, N), np.repeat(None, N+1)])
+    
+    # Create empy arrays to be filled with final results
+    final_times = []
+    final_trajectories = []
     
     # Simulate the jump processes
     times_of_jumps, sizes_of_jumps = simulator_jump_process(t0, T, M)
     
-    # 
-    for traj_index in range(M):
-        jump_index = 0
-        max_n_jumps = len(times_of_jumps[traj_index])
-        for t_index, t in enumerate(times[:-1]):
-            # Obtain the previous value
-            x_n = trajectories[traj_index, t_index]
-            
-            # Compute the jumping value from t_n to t_n+1
-            # Multiple jumps might have happened in this interval
-            while jump_index <= max_n_jumps and \
-                    times_of_jumps[traj_index, jump_index] < times[t_index]:
-                jump_time = times_of_jumps[traj_index, jump_index]
-                x_n += c(jump_time, x_n) * sizes_of_jumps[traj_index, jump_index]
-                jump_index += 1
-            
-            # Compute the next value of the trajectory
-            trajectories[traj_index, t_index+1] = trajectories[traj_index, t_index] + \
-                                                a(t, x) * delta_t
-            
-        trajectories.T[idx+1] = x + a(t, x) * delta_t + z * b(t, x) * sqrt_delta_t
-            
+    # Each trajectory has different length (the numebr of jumps is different, so the length of
+    # the times array will be different). By computing 
+    for single_times_oj_jumps, single_sizes_oj_jumps in zip(times_of_jumps, sizes_of_jumps):
+        # Create a 2-d array with the times and the sizes of jumps
+        jump_times = np.array([single_times_oj_jumps, single_sizes_oj_jumps])
+
+        # Join the time grid and sort them by increasing times, keeping the correct
+        # jump associated to each time.
+        times_and_jumps = np.concatenate((original_times, jump_times), axis=1)
+        times_and_jumps = np.array(sorted(times_and_jumps.T, key=lambda x: x[0])).T
+
+        # Unpack the times and jumps
+        times, jumps = times_and_jumps
+        N_t = len(times)
+
+        # Create noise for every time that will be computed.
+        noise = np.random.randn(N_t-1)
+
+        # Initialize trayectories using x0 and the rest of the variables.
+        trajectory = np.repeat(x0, N_t)
+
+        # Create the trajectories following the studied algorithm
+        for idx, (t, j, x, z) in enumerate(zip(times[:-1], jumps[:-1], trajectory[:-1], noise)):
+            trajectory[idx+1] = x + a(t, x) * delta_t + z * b(t, x) * sqrt_delta_t
+                
+            if j is not None:
+                trajectory[idx+1] = trajectory[idx+1] + c(t, trajectory[idx+1]) * j
         
-        for idx, (t, x, z) in enumerate(zip(times[:-1], trajectories.T[:-1], noise.T)):
-            trajectories.T[idx+1] = x + a(t, x) * delta_t + z * b(t, x) * sqrt_delta_t \
-                + 0.5 * b(t, x) * db_dx(t, x) * (z**2 - 1) * delta_t
-
-
-    print('No te olvides de recorrer el ultimo tiempo por si hay algun salto ahi!')
-
-
-
-    
+        # Save the times and trajectories
+        final_times.append(times)
+        final_trajectories.append(trajectory)
+                
+    return final_times, final_trajectories
 
 
 def subplot_mean_and_std(x, mean, std, fig_num=1, color='b',
