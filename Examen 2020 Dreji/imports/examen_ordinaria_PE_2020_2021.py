@@ -1,11 +1,31 @@
 import numpy as np
+import random
 import matplotlib.pyplot as plt
-import stochastic_plots as stoch
-import BM_simulators as BM
+import imports.stochastic_plots as stoch
+import imports.BM_simulators as BM
 from scipy.integrate import quad
 from scipy import stats
 from typing import List, Set, Dict, Tuple, Optional
 
+
+def collapse(state):
+    """
+        Given a state, collapses it to a single position
+        with the given probabilities in the state. For example, given:
+            state = [1/3, 2/3]
+        collapse(state) will output:
+        - [1, 0] with probability 1/3
+        - [0, 1] with probability 2/3
+    """
+    state = np.array(state)
+    F_n = np.cumsum(state)
+    F_n = np.insert(F_n, 0, 0, axis=0)
+    r = np.random.rand()
+    collapsed = np.zeros(len(state))
+    for i, (x1, x2) in enumerate(zip(F_n[:-1], F_n[1:])):
+        if r > x1 and r < x2:
+            collapsed[i] = 1
+    return collapsed
 
 
 def simulate_continuous_time_Markov_Chain(
@@ -57,24 +77,49 @@ def simulate_continuous_time_Markov_Chain(
     >>> transition_matrix = [[  0,   1, 0], 
     ...                      [  0,   0, 1],
     ...                      [1/2, 1/2, 0]]
+    >>> lambda_rates = [2, 1, 3]
+    >>> t0 = 0.0
+    >>> t1 = 100.0
     >>> state_0 = 0
     # Simulate and plot a trajectory.
     >>> M = 1 # Number of simulations
     >>> N = 100 # Time steps per simulation
-    >>> times, trajectories = pe.simulate_discrete_time_Markov_Chain(transition_matrix, 
-    ...                                                              state_0, 
-    ...                                                              M, 
-    ...                                                              N)
+    >>> arrival_times_CTMC, trajectories_CTMC = (
+    ...     pe.simulate_continuous_time_Markov_Chain(
+    ...     transition_matrix, lambda_rates, 
+    ...     state_0, M, t0, t1))
     >>> fig, ax = plt.subplots(1, 1, figsize=(10,5), num=1)
-    >>> ax.step(times, 
-    ...         trajectories[0],
+    >>> ax.step(arrival_times_CTMC[0], 
+    ...         trajectories_CTMC[0],
     ...         where='post')
-    >>> ax.set_ylabel('State')
-    >>> ax.set_xlabel('Time')
-    >>> _ = ax.set_title('Simulation of a discrete-time Markov chain')
+    >>> ax.set_ylabel('state')
+    >>> ax.set_xlabel('time')
+    >>> _ = ax.set_title('Simulation of a continuous-time Markov chain')
     """
+    arrival_times = []
+    trajectories = []
     
-    return arrival_times, tajectories
+    for _ in range(M):
+        t = t0
+        state = state_0
+        new_times = [t0]
+        new_trajectory = [state_0]
+        
+        while True:
+            t += np.random.exponential(scale=1.0/lambda_rates[state])
+            if t > t1:
+                break
+            
+            collapsed_state = collapse(transition_matrix[state])
+            state = np.argmax(collapsed_state == 1)
+
+            new_times.append(t)
+            new_trajectory.append(state)
+
+        arrival_times.append(new_times)
+        trajectories.append(new_trajectory)
+
+    return arrival_times, trajectories
 
 
 def price_EU_call(

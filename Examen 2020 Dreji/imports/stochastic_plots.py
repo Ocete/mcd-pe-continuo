@@ -19,12 +19,12 @@ def plot_trajectories(t, X,
     M = np.min((M, max_trajectories))
     fig = plt.figure(fig_num)
     fig.clf()
-    plt.plot(t, X[:M,:].T, linewidth=1)
+    plt.plot(t, X[:M,:].T, linewidth=1, label='_nolegend_')
     plt.xlabel('t', fontsize=font_size)
     plt.ylabel('X(t)', fontsize=font_size)
     plt.title('Simulation', fontsize=font_size)
   
-    plt.plot(t, np.mean(X, axis=0), linewidth=3, color=mean_color)
+    #plt.plot(t, np.mean(X, axis=0), linewidth=3, color=mean_color)
   
     
   
