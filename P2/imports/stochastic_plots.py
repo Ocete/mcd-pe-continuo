@@ -54,7 +54,7 @@ def plot_trajectories_jump_diffusion(t, X,
     M = len(X)
     M = np.min((M, max_trajectories))
     fig = plt.figure(fig_num)
-    fig.clf()
+    fig.clf() 
     
     for times, x in zip(t[:M], X[:M]):
         plt.plot(times, x, label='_nolegend_')
