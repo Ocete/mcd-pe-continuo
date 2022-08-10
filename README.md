@@ -1,20 +1,5 @@
-# mcd-pe-continuo
-
-Repositorio para las prácticas parte de **tiempo continuo** de la asignatura Procesos estocásticos del Master en Ciencia de Datos de la Universidad Autónoma de Madrid (UAM)
-
-En esta parte de la asignatura hemos realizado dos prácticas:
-
-- En la primera, hemos hecho un estudio sobre **procesos de llegada**, procesos de **Poisson** y, posteriormente, estudio sobre simulación de **procesos de Wiener** su generalización: **movimientos Brownianos**. (Carpeta [P1](https://github.com/Ocete/mcd-pe-continuo/tree/main/P1))
-
-- En la segunda, realizamos simulaciones utilizando algoritmos para estimar soluciones de **ecuaciones diferenciales estocásticas** (Carpeta [P2](https://github.com/Ocete/mcd-pe-continuo/tree/main/P2))
-
-Además, incluimos en el repositorio la resolución hecha por nosotros de los exámenes de la asignatura tanto del curso 2020-2021 (hecha para practicar, incompleta), como de nuestro propio examen en el curso 2021-2022.
-
+Continuous time stochastic processes
 ---
-
-# MSc - continuous-time stochastic processes
-
-Repository for the **continuous time** part of the subject subject "Procesos estocásticos" (*Stochastic Processes*)  at the Data Science Masters Degree at Universidad Autónoma de Madrid (UAM)
 
 In this part of the subject, we have made two assignments:
 
